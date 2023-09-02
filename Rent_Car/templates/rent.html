@@ -1,0 +1,154 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+<title>Rent</title>
+{% endblock title %} 
+
+{% load static %} 
+
+{% block blockscover %}
+{% include 'partials/_blocksover.html' with title="Rent Car" content="Lorem ipsum dolor sit amet consectetur adipisicing elit." %}
+{% endblock blockscover %}
+
+{% block content %}
+
+  <div class="site-section bg-light" id="contact-section">
+    <div class="container">
+      <div class="row justify-content-center text-center">
+      <div class="col-7 text-center mb-5">
+        <h2>Contact Us Or Use This Form To Rent A Car</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nemo assumenda, dolorum necessitatibus eius earum voluptates sed!</p>
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %} style="color:red"> <b> {{ message }} </b></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+      <div class="row">
+        <div class="col-lg-8 mb-5" >
+            <form action="{% url 'rent' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group row">
+                    <div class="col-md-6 mb-4 mb-lg-0">
+                        <input type="text" name="first_name" class="form-control" placeholder="First name">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" name="last_name" class="form-control" placeholder="Last name">
+                    </div>
+                </div>
+            
+                <div class="form-group row">
+                    <div class="col-md-6 mb-4 mb-lg-0">
+                        <input type="email" name="email" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="tel" name="phone" class="form-control" placeholder="Phone">
+                    </div>
+                </div>
+            
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <select name="RentedCar" id="RentedCar" class="form-control" onchange="setCityForSelectedCar()">
+                            {% for car in cars %}
+                            <option value="{{ car.id }}" data-city="{{ car.city.id }}" data-price="{{ car.price_per_day }}">{{ car.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            
+                <div class="form-group row">
+                    <div class="col-md-6 mb-4 mb-lg-0">
+                        <select name="Rentalcity" id="Rentalcity" class="form-control"  onchange="setCityForSelectedCar()">
+                            {% for city in cities %}
+                            <option value="{{ city.id }}">{{ city.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select name="Dropoffcity" id="Dropoffcity" class="form-control">
+                            {% for city in cities %}
+                            <option value="{{ city.id }}">{{ city.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            
+                <div class="form-group row">
+                    <div class="col-md-6 mb-4 mb-lg-0">
+                        <input type="date" name="start_date" id="start_date" class="form-control px-3" placeholder="Start date">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="date" name="return_date" id="return_date" class="form-control px-3" placeholder="Return date" onchange="calculateTotalPrice()">
+                    </div>
+                </div>
+            
+                <div class="form-group row">
+                    <div class="col-md-12"id="total_price">Total Price: $0</div>
+                    <input type="hidden" name="total_price" id="total_price_input">
+                </div>
+            
+                <div class="form-group row">
+                    <div class="col-md-6 mr-auto">
+                        <input type="submit" class="btn btn-block btn-primary text-white py-3 px-5" value="Rent">
+                    </div>
+                </div>
+            </form>
+            
+        </div>
+        <div class="col-lg-4 ml-auto">
+          <div class="bg-white p-3 p-md-5">
+            <h3 class="text-black mb-4">Contact Info</h3>
+            <ul class="list-unstyled footer-link">
+              <li class="d-block mb-3">
+                <span class="d-block text-black">Address:</span>
+                <span>34 Street Name, City Name Here, United States</span></li>
+              <li class="d-block mb-3"><span class="d-block text-black">Phone:</span><span>+1 242 4942 290</span></li>
+              <li class="d-block mb-3"><span class="d-block text-black">Email:</span><span>info@yourdomain.com</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block js %}
+<script>
+    function calculateTotalPrice() {
+        let selectedCar = document.getElementById("RentedCar");
+        let dailyPrice = parseFloat(selectedCar.options[selectedCar.selectedIndex].getAttribute("data-price"));
+        
+        let startDate = new Date(document.getElementById("start_date").value);
+        let endDate = new Date(document.getElementById("return_date").value);
+        
+        if (endDate < startDate) {
+            alert("Return date can't be before the start date.");
+            return;
+        }
+        
+        let differenceInTime = endDate.getTime() - startDate.getTime();
+        let differenceInDays = differenceInTime / (1000 * 3600 * 24);
+        
+        let totalPrice = differenceInDays * dailyPrice;
+        
+        document.getElementById("total_price").innerHTML = "Total Price: $" + totalPrice.toFixed(2);
+        document.getElementById("total_price_input").value = totalPrice.toFixed(2);
+    }
+
+    function setCityForSelectedCar() {
+        let selectedCar = document.getElementById("RentedCar");
+        let selectedCityId = selectedCar.options[selectedCar.selectedIndex].getAttribute("data-city");
+    
+        let rentalCitySelect = document.getElementById("Rentalcity");
+        for (let i = 0; i < rentalCitySelect.options.length; i++) {
+            if (rentalCitySelect.options[i].value == selectedCityId) {
+                rentalCitySelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+</script>
+{% endblock js %}
